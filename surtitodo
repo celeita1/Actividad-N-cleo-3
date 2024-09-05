@@ -1,201 +1,449 @@
 package surtitodo;
 
-public class Producto {
-    private static int contador = 1;  
+import java.util.ArrayList;
+import java.util.List;
 
-    private int codigo;               
+
+public class Supermercado {
+    private List<Producto> productos;
+    private int codigoProducto;
+
+    public Supermercado() {
+        productos = new ArrayList<>();
+        codigoProducto = 1;
+    }
+
+    public void agregarProducto(String nombre, int cantidad, double precio) {
+        Producto producto = new Producto(String.format("%04d", codigoProducto++), nombre, cantidad, precio);
+        productos.add(producto);
+    }
+
+    public void modificarProducto(String codigo, double incremento) {
+        for (Producto producto : productos) {
+            if (producto.getCodigo().equals(codigo)) {
+                producto.setPrecio(producto.getPrecio() * (1 + incremento / 100));
+                producto.setTotal(producto.getCantidad() * producto.getPrecio());
+                break;
+            }
+        }
+    }
+
+    public void eliminarProducto(String codigo) {
+        productos.removeIf(producto -> producto.getCodigo().equals(codigo));
+    }
+
+    public Producto buscarProducto(String codigo) {
+        for (Producto producto : productos) {
+            if (producto.getCodigo().equals(codigo)) {
+                return producto;
+            }
+        }
+        return null;
+    }
+
+    public List<Producto> getProductos() {
+        return productos;
+    }
+
+    public double calcularSubtotal() {
+        return productos.stream().mapToDouble(Producto::getTotal).sum();
+    }
+
+    public double calcularIVA() {
+        return calcularSubtotal() * 0.19;
+    }
+
+    public double calcularPrecioFinal() {
+        return calcularSubtotal() + calcularIVA();
+    }
+}
+
+
+
+package surtitodo;
+
+
+public class Producto {
+    private String codigo;
     private String nombre;
     private int cantidad;
     private double precio;
     private double total;
 
-    public Producto(String nombre, int cantidad, double precio) {
-        this.codigo = contador++;  
+    public Producto(String codigo, String nombre, int cantidad, double precio) {
+        this.codigo = codigo;
         this.nombre = nombre;
         this.cantidad = cantidad;
         this.precio = precio;
         this.total = cantidad * precio;
     }
 
-  
-    public int getCodigo() { return codigo; }
-    public void setCodigo(int codigo) { this.codigo = codigo; }
+    public String getCodigo() {
+        return codigo;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public int getCantidad() { return cantidad; }
-    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+    public int getCantidad() {
+        return cantidad;
+    }
 
-    public double getPrecio() { return precio; }
-    public void setPrecio(double precio) { this.precio = precio; }
+    public double getPrecio() {
+        return precio;
+    }
 
-    public double getTotal() { return total; }
-    public void setTotal(double total) { this.total = total; }
+    public double getTotal() {
+        return total;
+    }
 
-    public void actualizarTotal() {
-        this.total = this.cantidad * this.precio;
+    public void setPrecio(double precio) {
+        this.precio = precio;
+        this.total = cantidad * precio;
+    }
+
+    public void setTotal(double total) {
+        this.total = total;
     }
 
     @Override
     public String toString() {
-        return String.format("%-10d %-15s %-10d %-10.2f %-10.2f", codigo, nombre, cantidad, precio, total);
+        return String.format(" Código: %s, Nombre: %s, Cantidad: %d, Precio: %.2f, Total: %.2f",
+                             codigo, nombre, cantidad, precio, total);
     }
 }
 
 
-
-
-
-
 package surtitodo;
 
-import java.util.LinkedList;
 
-public class Factura {
-    private static int contadorFactura = 1;  
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-    private LinkedList<Producto> productos;
-    private int numeroCaja;
-    private int numeroFactura;
+public class INTERFAZ {
+    private Supermercado supermercado;
+    private JTextArea textArea;
+    private JTextField ProductoField, cantidadField, precioField;
+    private JTextField cajaField, vendedorField;
+    private JTextField DoclienteField, nombresField, apellidosField, telefonoField, correoField, direccionField;
+    private JLabel fechaLabel;
 
-    public Factura(int numeroCaja) {
-        this.productos = new LinkedList<>();
-        this.numeroCaja = numeroCaja;
-        this.numeroFactura = contadorFactura++;  
+    public INTERFAZ() {
+        supermercado = new Supermercado();
+        crearGUI();
     }
 
-    public void agregarProducto(String nombre, int cantidad, double precio) {
-        Producto producto = new Producto(nombre, cantidad, precio);
-        productos.add(producto);
-    }
+    private void crearGUI() {
+        JFrame frame = new JFrame("SurtiTodo");
+        frame.setSize(900, 500);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
 
-    public void modificarProducto(int codigo, double incremento) {
-        for (Producto p : productos) {
-            if (p.getCodigo() == codigo) {
-                double nuevoPrecio = p.getPrecio() * (1 + incremento);
-                p.setPrecio(nuevoPrecio);
-                p.actualizarTotal();
-                break;
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel ProductoLabel = new JLabel("Producto:");
+        JLabel cantidadLabel = new JLabel("Cantidad :");
+        JLabel precioLabel = new JLabel("Precio:");
+
+        ProductoField = new JTextField();
+        cantidadField = new JTextField();
+        precioField = new JTextField();
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        inputPanel.add(ProductoLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        inputPanel.add(ProductoField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        inputPanel.add(cantidadLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        inputPanel.add(cantidadField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        inputPanel.add(precioLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        inputPanel.add(precioField, gbc);
+
+        JPanel extraPanel = new JPanel();
+        extraPanel.setLayout(new GridBagLayout());
+
+        fechaLabel = new JLabel("Fecha de Venta: " + getCurrentDate());
+        JLabel cajaLabel = new JLabel("Número de Caja:");
+        JLabel vendedorLabel = new JLabel("Datos del Vendedor:");
+        JLabel DoclienteLabel = new JLabel("Documento Cliente:");
+        JLabel nombresLabel = new JLabel("Nombres:");
+        JLabel apellidosLabel = new JLabel("Apellidos:");
+        JLabel telefonoLabel = new JLabel("Teléfono:");
+        JLabel direccionLabel = new JLabel("Dirección:");
+        JLabel correoLabel = new JLabel("Correo Electrónico:");
+
+        cajaField = new JTextField();
+        vendedorField = new JTextField();
+        DoclienteField = new JTextField();
+        nombresField = new JTextField();
+        apellidosField = new JTextField();
+        telefonoField = new JTextField();
+        correoField = new JTextField();
+        direccionField = new JTextField();
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        extraPanel.add(fechaLabel, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        extraPanel.add(cajaLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        extraPanel.add(cajaField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        extraPanel.add(vendedorLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        extraPanel.add(vendedorField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        extraPanel.add(DoclienteLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        extraPanel.add(DoclienteField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        extraPanel.add(nombresLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        extraPanel.add(nombresField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        extraPanel.add(apellidosLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        extraPanel.add(apellidosField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        extraPanel.add(telefonoLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 6;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        extraPanel.add(telefonoField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        extraPanel.add(direccionLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 7;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        extraPanel.add(direccionField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        extraPanel.add(correoLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 8;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        extraPanel.add(correoField, gbc);
+
+        textArea = new JTextArea();
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(0, 3, 11, 11));
+
+        JButton agregarButton = new JButton("Agregar Producto");
+        JButton modificarButton = new JButton("Modificar Producto");
+        JButton eliminarButton = new JButton("Eliminar Producto");
+        JButton buscarButton = new JButton("Buscar Producto");
+        JButton mostrarButton = new JButton("Mostrar Productos");
+        JButton facturaButton = new JButton("Generar Factura");
+
+        agregarButton.addActionListener((ActionEvent e) -> {
+            try {
+                String nombre = ProductoField.getText();
+                int cantidad = Integer.parseInt(cantidadField.getText());
+                double precio = Double.parseDouble(precioField.getText());
+                supermercado.agregarProducto(nombre, cantidad, precio);
+                mostrarMensaje("Producto agregado.");
+            } catch (NumberFormatException ex) {
+                mostrarMensaje("Ingrese valores válidos.");
             }
-        }
-    }
+        });
 
-    public void eliminarProducto(int codigo) {
-        productos.removeIf(p -> p.getCodigo() == codigo);
-    }
-
-    public Producto buscarProducto(int codigo) {
-        for (Producto p : productos) {
-            if (p.getCodigo() == codigo) {
-                return p;
+        modificarButton.addActionListener((ActionEvent e) -> {
+            String codigo = JOptionPane.showInputDialog("Código del producto a modificar:");
+            if (codigo != null) {
+                supermercado.modificarProducto(codigo, 5); 
+                mostrarMensaje("Producto modificado.");
             }
-        }
-        return null;
+        });
+
+        eliminarButton.addActionListener((ActionEvent e) -> {
+            String codigo = JOptionPane.showInputDialog("Código del producto a eliminar:");
+            if (codigo != null) {
+                supermercado.eliminarProducto(codigo);
+                mostrarMensaje("Producto eliminado.");
+            }
+        });
+
+        buscarButton.addActionListener((ActionEvent e) -> {
+            String codigo = JOptionPane.showInputDialog("Código del producto a buscar:");
+            if (codigo != null) {
+                Producto producto = supermercado.buscarProducto(codigo);
+                if (producto != null) {
+                    mostrarMensaje(producto.toString());
+                } else {
+                    mostrarMensaje("Producto no encontrado.");
+                }
+            }
+        });
+
+        mostrarButton.addActionListener((ActionEvent e) -> {
+            StringBuilder sb = new StringBuilder();
+            for (Producto producto : supermercado.getProductos()) {
+                sb.append(producto.toString()).append("\n");
+            }
+            textArea.setText(sb.toString());
+        });
+
+        facturaButton.addActionListener((ActionEvent e) -> {
+            generarFactura();
+        });
+
+        buttonPanel.add(agregarButton);
+        buttonPanel.add(modificarButton);
+        buttonPanel.add(eliminarButton);
+        buttonPanel.add(buscarButton);
+        buttonPanel.add(mostrarButton);
+        buttonPanel.add(facturaButton);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, extraPanel, scrollPane);
+        splitPane.setDividerLocation(300);
+
+        frame.add(inputPanel, BorderLayout.NORTH);
+        frame.add(buttonPanel, BorderLayout.SOUTH);
+        frame.add(splitPane, BorderLayout.CENTER);
+
+        frame.setVisible(true);
     }
 
-    public void mostrarFactura() {
-        System.out.println(" Numero de Factura: " + numeroFactura + " | Numero de Caja: " + numeroCaja);
-        System.out.printf("%-10s %-15s %-10s %-10s %-10s\n", "Codigo", "Nombre", "Cantidad", "Precio", "Total");
-        System.out.println("-----------------------------------------------------");
-        double totalFactura = 0;
-        int totalProductos = 0;  
+    private void generarFactura() {
+        StringBuilder factura = new StringBuilder();
+        factura.append(String.format(" Fecha: %s%n", getCurrentDate()));
+        factura.append(String.format(" Número de Caja: %s%n", cajaField.getText()));
+        factura.append(String.format(" Datos del Vendedor: %s%n", vendedorField.getText()));
+        factura.append(String.format(" Nombres Cliente: %s%n", nombresField.getText()));
+        factura.append(String.format(" Apellidos: %s%n", apellidosField.getText()));
+        factura.append(String.format(" Documento: %s%n", DoclienteField.getText()));
+        factura.append(String.format(" Teléfono: %s%n", telefonoField.getText()));
+        factura.append(String.format(" Dirección: %s%n", direccionField.getText()));
+        factura.append(String.format(" Correo Electrónico: %s%n%n", correoField.getText()));
 
-        for (Producto p : productos) {
-            System.out.println(p);
-            totalFactura += p.getTotal();
-            totalProductos += p.getCantidad(); 
+        factura.append(String.format(" %-10s %-10s %-10s %-10s%n", " Código", " Cantidad", " Precio", " Total"));
+        factura.append(String.format(" %-10s %-10s %-10s %-10s%n", " ------", " --------", " ------", " -----"));
+
+        for (Producto producto : supermercado.getProductos()) {
+            factura.append(String.format(" %-10s %-10d %-10.2f %-10.2f%n", 
+                producto.getCodigo(), producto.getCantidad(), producto.getPrecio(), producto.getTotal()));
         }
 
-        double iva = totalFactura * 0.19;
-        double precioFinal = totalFactura + iva;
+        double subtotal = supermercado.calcularSubtotal();
+        double iva = supermercado.calcularIVA();
+        double total = supermercado.calcularPrecioFinal();
 
-        System.out.printf("\nTotal Productos: %d\n", totalProductos);
-        System.out.printf("Total: %.2f\n", totalFactura);
-        System.out.printf("IVA (19%%): %.2f\n", iva);
-        System.out.printf("Precio Final: %.2f\n", precioFinal);
+        factura.append(String.format("%n Subtotal: %.2f%n", subtotal));
+        factura.append(String.format(" IVA (19%%): %.2f%n", iva));
+        factura.append(String.format(" Total: %.2f%n", total));
+
+        textArea.setText(factura.toString());
     }
-}
 
+    private void mostrarMensaje(String mensaje) {
+        JOptionPane.showMessageDialog(null, mensaje);
+    }
 
+    private String getCurrentDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        return sdf.format(new Date());
+    }
 
-
-
-
-
-package surtitodo;
-
-import java.util.Scanner;
-
-public class Main {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Ingrese el numero de caja: ");
-        int numeroCaja = scanner.nextInt();
-        scanner.nextLine();  
-        Factura factura = new Factura(numeroCaja);
-
-        while (true) {
-            System.out.println("Opciones:");
-            System.out.println("1. Agregar Producto");
-            System.out.println("2. Modificar Producto");
-            System.out.println("3. Eliminar Producto");
-            System.out.println("4. Buscar Producto");
-            System.out.println("5. Mostrar Factura");
-            System.out.println("6. Salir");
-            System.out.print("Elija una opcion: ");
-            
-            int opcion = scanner.nextInt();
-            scanner.nextLine();  
-
-            switch (opcion) {
-                case 1 -> {
-                    System.out.print("Nombre: ");
-                    String nombre = scanner.nextLine();
-                    System.out.print("Cantidad: ");
-                    int cantidad = scanner.nextInt();
-                    System.out.print("Precio: ");
-                    double precio = scanner.nextDouble();
-                    scanner.nextLine();  
-                    factura.agregarProducto(nombre, cantidad, precio);
-                }
-
-                case 2 -> {
-                    System.out.print("Codigo del producto a modificar: ");
-                    int codigoModificar = scanner.nextInt();
-                    scanner.nextLine();
-                    factura.modificarProducto(codigoModificar, 0.05);
-                }
-
-                case 3 -> {
-                    System.out.print("Codigo del producto a eliminar: ");
-                    int codigoEliminar = scanner.nextInt();
-                    scanner.nextLine(); 
-                    factura.eliminarProducto(codigoEliminar);
-                }
-
-                case 4 -> {
-                    System.out.print("Codigo del producto a buscar: ");
-                    int codigoBuscar = scanner.nextInt();
-                    scanner.nextLine();  
-                    Producto p = factura.buscarProducto(codigoBuscar);
-                    if (p != null) {
-                        System.out.println(p);
-                    } else {
-                        System.out.println("Producto no encontrado.");
-                    }
-                }
-
-                case 5 -> factura.mostrarFactura();
-
-                case 6 -> {
-                    System.out.println("Saliendo...");
-                    scanner.close();
-                    return;
-                }
-
-                default -> System.out.println("Opcion no valida.");
-            }
-        }
+        SwingUtilities.invokeLater(INTERFAZ::new);
     }
 }
+
+
+
+
+
+
